@@ -135,7 +135,7 @@ jobs:
           command: |
             aws ec2 describe-instances \
             --query 'Reservations[*].Instances[*].PublicIpAddress' \
-            --output text > .circleci/ansible/inventory.txt
+            --output text >> .circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
           paths:
@@ -162,8 +162,7 @@ jobs:
       - run:
           name: Configure server
           command: |
-            # Your code here
-            exit 1
+            ansible-playbook -i inventory.txt main.yml
       # Here's where you will add some code to rollback on failure
 
 workflows:
@@ -181,3 +180,5 @@ workflows:
           requires: [build-frontend]
       - deploy-infrastructure:
           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
