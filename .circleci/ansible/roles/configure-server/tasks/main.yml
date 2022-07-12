@@ -10,10 +10,12 @@
   apt:
     upgrade: yes
 
-- name: "install python for Ansible."
-  become: yes
-  shell: |
-    sudo apt install python3
+- name: "install pythom3"
+  become: true
+  apt:
+    name: ["python3"]
+    state: latest
+    update_cache: yes
 
 - name: "install dependencies"
   become: true
