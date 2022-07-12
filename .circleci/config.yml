@@ -118,7 +118,7 @@ jobs:
           command: |
             aws cloudformation deploy \
             --template-file .circleci/files/backend.yml \
-            --tags project=udapeople-backend \
+            --tags project=udapeople \
             --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
@@ -126,7 +126,7 @@ jobs:
           command: |
             aws cloudformation deploy \
             --template-file .circleci/files/frontend.yml \
-            --tags project=udapeople-frontend \
+            --tags project=udapeople \
             --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
@@ -134,11 +134,11 @@ jobs:
           command: |
             aws ec2 describe-instances \
             --query 'Reservations[*].Instances[*].PublicIpAddress' \
-            --filters "Name=tag:project,Values=udapeople-backend" --output text >> .circleci/ansible/inventory.txt
+            --filters "Name=tag:project,Values=udapeople" --output text > ~/tmpfile.txt
       - persist_to_workspace:
           root: ~/
           paths:
-            - project/.circleci/ansible/inventory.txt
+            - tmpfile.txt
       # Here's where you will add some code to rollback on failure 
       - destroy-environment
   
@@ -151,13 +151,17 @@ jobs:
           # You can get this ID in the section where you registered the SSH Key
           fingerprints:
             ["1f:47:83:cc:b7:52:02:aa:2e:36:62:95:b8:e3:17:15"]
-      #- attach_workspace:
-      #    at: ~/
+      - attach_workspace:
+          at: ~/
       - run:
           name: Install dependencies (ansible, awscli)
           command: |
             apk add --update ansible
             pip install awscli
+      - run:
+          name: Copy content from tmp file to inventory file
+          command: |
+            cat ~/tmpfile.txt >> .circleci/ansible/inventory.txt
       - run:
           name: Show inventory file content
           command: |
