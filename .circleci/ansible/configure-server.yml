@@ -13,10 +13,25 @@
     - ansible_stdout_callback: yaml
 
   pre_tasks:
+<<<<<<< HEAD
     - name: update apt-get repo and cache
       apt: update_cache=yes force_apt_get=yes cache_valid_time=7200
     - name: upgrade packages
       apt: upgrade=dist force_apt_get=yes
+=======
+    #- name: update apt-get repo and cache
+      #apt: update_cache=yes force_apt_get=yes cache_valid_time=7200
+    #- name: upgrade packages
+      #apt: upgrade=dist force_apt_get=yes
+
+    - name: "wait 600 seconds for target connection to become reachable/usable."
+      # Your code here
+      wait_for_connection:
+        timeout: 600
+
+    #- name: "install python for Ansible."
+      # Your code here
+>>>>>>> 0e3f6d30a2e5fdebb9b99ea2644cdb6b50de4f6f
 
   # Get the environment variables from CircleCI and add to the EC2 instance
   environment:
