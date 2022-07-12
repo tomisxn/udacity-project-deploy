@@ -55,7 +55,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-test]
+          keys: [frontend-build]
       - run:
           name: Front-end test
           command: |
@@ -69,7 +69,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-test]
+          keys: [backend-build]
       - run:
           name: Back-end test
           command: |
@@ -83,14 +83,13 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [scan-frontend]
+          keys: [frontend-build]
       - run:
           name: Scan frontend
           command: |
             cd frontend
             npm install
             npm audit fix --audit-level=critical --force
-            npm audit --audit-level=critical
 
   scan-backend:
     docker:
@@ -98,13 +97,13 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [scan-backend]
+          keys: [backend-build]
       - run:
           name: Scan backend
           command: |
             cd backend
             npm install
-            npm audit fix
+            npm audit fix --audit-level=critical
   
   deploy-infrastructure:
     docker:
@@ -119,7 +118,7 @@ jobs:
           command: |
             aws cloudformation deploy \
             --template-file .circleci/files/backend.yml \
-            --tags project=udapeople \
+            --tags project=udapeople-backend \
             --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
@@ -127,7 +126,7 @@ jobs:
           command: |
             aws cloudformation deploy \
             --template-file .circleci/files/frontend.yml \
-            --tags project=udapeople \
+            --tags project=udapeople-frontend \
             --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
@@ -135,15 +134,11 @@ jobs:
           command: |
             aws ec2 describe-instances \
             --query 'Reservations[*].Instances[*].PublicIpAddress' \
-            --filters "Name=tag:project,Values=udapeople" --output text > ~/tmpfile.txt
-      - run:
-          name: Show tmp file content
-          command: |
-            cat ~/tmpfile.txt
+            --filters "Name=tag:project,Values=udapeople-backend" --output text >> .circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
           paths:
-            - tmpfile.txt
+            - project/.circleci/ansible/inventory.txt
       # Here's where you will add some code to rollback on failure 
       - destroy-environment
   
@@ -161,11 +156,7 @@ jobs:
           name: Install dependencies (ansible, awscli)
           command: |
             apk add --update ansible
-            pip3 install awscli
-      - run:
-          name: Copy content from tmp file to inventory file
-          command: |
-            cat ~/tmpfile.txt >> .circleci/ansible/inventory.txt
+            pip install awscli
       - run:
           name: Configure server
           command: |
