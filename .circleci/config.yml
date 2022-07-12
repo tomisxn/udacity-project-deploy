@@ -158,32 +158,20 @@ jobs:
       - attach_workspace:
           at: ~/
       - run:
-          name: Install dependencies (ansible)
+          name: Install dependencies (ansible, awscli)
           command: |
             apk add --update ansible
-      - run:
-          name: Install dependencies (awscli)
-          command: |
             pip3 install awscli
-      - run:
-          name: Configure AWS IAM Profile
-          command: |
-            aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
-            aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
-            aws configure set region ${AWS_DEFAULT_REGION}
       - run:
           name: Copy content from tmp file to inventory file
           command: |
-            cat ~/tmpfile.txt >> .circleci/ansible/inventory.txt     
-      - run:
-          name: Show inventory file content
-          command: |
-            cat .circleci/ansible/inventory.txt
+            cat ~/tmpfile.txt >> .circleci/ansible/inventory.txt
       - run:
           name: Configure server
           command: |
             cd .circleci/ansible
             ansible-playbook -i inventory.txt configure-server.yml
+
       # Here's where you will add some code to rollback on failure
       - destroy-environment
 
