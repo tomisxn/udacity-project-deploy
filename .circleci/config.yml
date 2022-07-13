@@ -209,17 +209,17 @@ jobs:
   
   run-migrations:
     docker:
-      - image: python:3.7-alpine3.16
+      - image: circleci/node:13.8.0
     steps:
       - checkout
       - restore_cache:
           keys: [backend-build]
-      - run: 
-          name: Install dependencies
-          command: |
-            apk add --update nodejs npm
-            apk add --update curl
-            pip install awscli
+      #- run: 
+      #    name: Install dependencies
+      #    command: |
+      #      apk add --update nodejs npm
+      #      apk add --update curl
+      #      pip install awscli
       - run:
           name: Run migrations
           command: |
@@ -237,9 +237,10 @@ jobs:
             then
               curl https://kvdb.io/NSD1WKm45BwztwFRjvo2ni/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
-      - save_cache:
-          paths: [backend/node_modules]
-          key: backend-build
+      #- save_cache:
+      #    paths: [backend/node_modules]
+      #    key: backend-build
+      
       # Here's where you will add some code to rollback on failure
       #- destroy-environments:
       #    frontend: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
