@@ -1,28 +1,33 @@
 ---
 - name: "update apt packages."
-  become: true
+  become: yes
   apt:
    update_cache: yes
 
 - name: "upgrade packages"
-  become: true
+  become: yes
   apt:
    upgrade: yes
 
+- name: remove unneeded deps
+  become: yes
+  apt:
+    autoremove: yes
+
 - name: "install dependencies"
-  become: true
+  become: yes
   apt:
     name: ["nodejs", "npm"]
     state: latest
     update_cache: yes
 
 - name: "install pm2"
-  become: true
+  become: yes
   npm:
     name: pm2
     global: yes
     production: yes
-    state: present
+    state: latest
 
 - name: extract the zipped artifact
   become: yes

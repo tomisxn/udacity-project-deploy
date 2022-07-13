@@ -197,6 +197,10 @@ jobs:
           command: |
             cat .circleci/ansible/inventory.txt
       - run:
+          name: Show backend env
+          command: |
+            cat ~/project/backend/.env 
+      - run:
           name: Configure server
           command: |
             cd .circleci/ansible
@@ -224,7 +228,7 @@ jobs:
       - run:
           name: Run migrations
           command: |
-            cd backend
+            cd backend/src
             npm install
             npm run migrations > migrations_dump.txt
       - run:
