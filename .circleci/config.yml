@@ -201,11 +201,6 @@ jobs:
           command: |
             cd .circleci/ansible
             ansible-playbook -i inventory.txt configure-server.yml
-      - run:
-          name: Show backend env
-          command: |
-            cat ~/project/backend/.env
-
       # Here's where you will add some code to rollback on failure
       - destroy-environments:
           frontend: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
