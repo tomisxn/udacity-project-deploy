@@ -235,19 +235,19 @@ jobs:
           command: |
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
-              curl https://kvdb.io/NSD1WKm45BwztwFRjvo2ni/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+              curl --insecure https://kvdb.io/NSD1WKm45BwztwFRjvo2ni/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
       #- save_cache:
       #    paths: [backend/node_modules]
       #    key: backend-build
       
       # Here's where you will add some code to rollback on failure
-      #- destroy-environments:
-      #    frontend: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
-      #    backend: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
-      #    bucket: "${CIRCLE_WORKFLOW_ID:0:7}"
-      #- revert-migrations:
-      #    workflow: "${CIRCLE_WORKFLOW_ID:0:7}"
+      - destroy-environments:
+          frontend: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+          backend: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
+          bucket: "${CIRCLE_WORKFLOW_ID:0:7}"
+      - revert-migrations:
+          workflow: "${CIRCLE_WORKFLOW_ID:0:7}"
   
   deploy-frontend:
     docker:
