@@ -18,9 +18,9 @@ commands:
           name: Destroy environment
           when: on_fail
           command: |
+            aws s3 rm "s3://udapeople-<< parameters.bucket >>" --recursive
             aws cloudformation delete-stack --stack-name << parameters.frontend >>
             aws cloudformation delete-stack --stack-name << parameters.backend >>
-            aws s3 rm "s3://udapeople-<< parameters.bucket >>" --recursive
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
@@ -33,8 +33,8 @@ commands:
           when: on_fail
           # Add when this will run
           command: |
-            SUCCESS = $(curl --insecure https://kvdb.io/NSD1WKm45BwztwFRjvo2ni/migration_<< parameters.workflow >>)
-            if(( $SUCCESS==1 )); 
+            SUCCESS=$(curl --insecure https://kvdb.io/UiHbJ371YgNoLfViAY31pc/migration_<< parameters.workflow >>)
+            if(( $SUCCESS == 1 )); 
             then
               cd ~/project/backend
               npm install
@@ -235,7 +235,7 @@ jobs:
           command: |
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
-              curl --insecure https://kvdb.io/NSD1WKm45BwztwFRjvo2ni/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+              curl --insecure https://kvdb.io/UiHbJ371YgNoLfViAY31pc/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
       #- save_cache:
       #    paths: [backend/node_modules]
@@ -325,12 +325,12 @@ jobs:
           paths: [backend/node_modules]
           key: backend-build
       # Here's where you will add some code to rollback on failure
-      #- destroy-environments:
-      #    frontend: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
-      #    backend: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
-      #    bucket: "${CIRCLE_WORKFLOW_ID:0:7}"
-      #- revert-migrations:
-      #    workflow: "${CIRCLE_WORKFLOW_ID:0:7}"
+      - destroy-environments:
+          frontend: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+          backend: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
+          bucket: "${CIRCLE_WORKFLOW_ID:0:7}"
+      - revert-migrations:
+          workflow: "${CIRCLE_WORKFLOW_ID:0:7}"
   
   smoke-test:
     docker:
