@@ -220,10 +220,6 @@ jobs:
       #      apk add --update nodejs npm
       #      apk add --update curl
       #      pip install awscli
-      - run: 
-          name: Install dependencies
-          command: |
-            npm install -g aws-cli
       - run:
           name: Run migrations
           command: |
@@ -246,8 +242,8 @@ jobs:
       #    key: backend-build
       
       # Here's where you will add some code to rollback on failure
-      - revert-migrations:
-          workflow: "${CIRCLE_WORKFLOW_ID:0:7}"
+      #- revert-migrations:
+      #    workflow: "${CIRCLE_WORKFLOW_ID:0:7}"
   
   deploy-frontend:
     docker:
