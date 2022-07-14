@@ -33,7 +33,7 @@ commands:
           when: on_fail
           # Add when this will run
           command: |
-            SUCCESS = $(curl --insecure https://kvdb.io/JPYZJHUdMcZ1AZipYTq4fm/migration_<< parameters.workflow >>)
+            SUCCESS = $(curl --insecure https://kvdb.io/NSD1WKm45BwztwFRjvo2ni/migration_<< parameters.workflow >>)
             if(( $SUCCESS==1 )); 
             then
               cd ~/project/backend
@@ -161,7 +161,7 @@ jobs:
           command: |
             aws ec2 describe-instances \
             --query 'Reservations[*].Instances[*].PublicIpAddress' \
-            --filters "Name=tag:project,Values=udapeople" --output text > ~/tmpfile.txt
+            --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text > ~/tmpfile.txt
       - persist_to_workspace:
           root: ~/
           paths:
@@ -268,7 +268,7 @@ jobs:
       - run:
           name: Get backend url
           command: |
-            export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:project,Values=udapeople" --output text)
+            export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
             export API_URL="http://${BACKEND_IP}:3030"
             echo "API_URL = ${API_URL}"
             echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
@@ -282,12 +282,12 @@ jobs:
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       # Here's where you will add some code to rollback on failure
-      #- destroy-environments:
-      #    frontend: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
-      #    backend: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
-      #    bucket: "${CIRCLE_WORKFLOW_ID:0:7}"
-      #- revert-migrations:
-      #    workflow: "${CIRCLE_WORKFLOW_ID:0:7}"
+      - destroy-environments:
+          frontend: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+          backend: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
+          bucket: "${CIRCLE_WORKFLOW_ID:0:7}"
+      - revert-migrations:
+          workflow: "${CIRCLE_WORKFLOW_ID:0:7}"
 
   deploy-backend:
     docker:
@@ -331,6 +331,51 @@ jobs:
       #    bucket: "${CIRCLE_WORKFLOW_ID:0:7}"
       #- revert-migrations:
       #    workflow: "${CIRCLE_WORKFLOW_ID:0:7}"
+  
+  smoke-test:
+    docker:
+      - image: python:3.7-alpine3.16
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update nodejs npm
+            apk add --update curl
+            pip install awscli
+      - run:
+          name: Get backend url
+          command: |
+            export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
+      - run:
+          name: Backend smoke test.
+          command: |
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "${API_URL}"
+            if curl "${API_URL}/api/status" | grep "ok"
+            then
+              return 0
+            else
+              return 1
+            fi
+      - run:
+          name: Frontend smoke test.
+          command: |
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-${AWS_DEFAULT_REGION}.amazonaws.com/#/employees"            
+            echo ${URL} 
+            if curl -s ${URL} | grep "Welcome"
+            then
+              return 1
+            else
+              return 1
+            fi
+      # Here's where you will add some code to rollback on failure
+      - destroy-environments:
+          frontend: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+          backend: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
+          bucket: "${CIRCLE_WORKFLOW_ID:0:7}"
+      - revert-migrations:
+          workflow: "${CIRCLE_WORKFLOW_ID:0:7}"
 
 workflows:
   default:
@@ -355,3 +400,5 @@ workflows:
           requires: [run-migrations]
       - deploy-backend:
           requires: [run-migrations]
+      - smoke-test:
+          requires: [deploy-frontend, deploy-backend]
